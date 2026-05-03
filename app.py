@@ -8,12 +8,12 @@ from urllib.parse import urlparse
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'calcinashop_secret_2024'
-CORS(app, origins="*", allow_headers=["Content-Type", "Authorization", "ngrok-skip-browser-warning"])
+CORS(app, origins="*", allow_headers=["Content-Type", "Authorization", "X-API-Key", "ngrok-skip-browser-warning"])
 
 @app.after_request
 def after_request(response):
     response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, ngrok-skip-browser-warning"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-API-Key, ngrok-skip-browser-warning"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
     return response
 
