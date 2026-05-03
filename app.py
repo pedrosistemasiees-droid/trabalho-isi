@@ -250,12 +250,13 @@ def registar_compra():
                     'quantidade_pedida': qty
                 }), 409
 
-            subtotal = produto['preco'] * qty
+            preco_unitario = float(produto['preco'])
+            subtotal = preco_unitario * qty
             total += subtotal
             itens_detalhes.append({
                 'produto_id': pid,
                 'nome': produto['nome'],
-                'preco_unitario': produto['preco'],
+                'preco_unitario': preco_unitario,
                 'quantidade': qty,
                 'subtotal': subtotal,
                 'stock_antes': produto['stock'],
