@@ -16,6 +16,13 @@ def after_request(response):
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, ngrok-skip-browser-warning"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
     return response
+
+
+@app.errorhandler(Exception)
+def handle_unexpected_error(error):
+    return jsonify({'erro': str(error)}), 500
+
+
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # ── CONFIGURAÇÃO DA BASE DE DADOS ──
