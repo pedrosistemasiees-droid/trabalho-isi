@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CalcinhaShop – Footwear ERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#1a3353;
+  --accent:#2563eb;
+  --accent-hover:#1d4ed8;
+  --accent-bg:#eff6ff;
+  --success:#16a34a;--success-bg:#dcfce7;
+  --warning:#d97706;--warning-bg:#fef9c3;
+  --danger:#dc2626;--danger-bg:#fee2e2;
+  --orange:#ea580c;--orange-bg:#fff7ed;
+  --gray-50:#f8fafc;--gray-100:#f1f5f9;--gray-200:#e2e8f0;
+  --gray-300:#cbd5e1;--gray-400:#94a3b8;--gray-500:#64748b;
+  --gray-600:#475569;--gray-700:#334155;--gray-800:#1e293b;
+  --white:#fff;
+  --sidebar:200px;
+  --r:8px;--r-sm:5px;--r-lg:14px;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 4px 16px rgba(0,0,0,.09);
+  --tr:.18s ease;
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray-800);font-size:14px;line-height:1.5}
+
+/* ── APP SHELL ── */
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:var(--sidebar);flex-shrink:0;
+  background:var(--white);border-right:1px solid var(--gray-200);
+  display:flex;flex-direction:column;
+}
+.sb-logo{padding:22px 18px 18px;border-bottom:1px solid var(--gray-100)}
+.sb-logo .brand{font-family:'DM Serif Display',serif;font-size:16px;color:var(--primary);line-height:1.1}
+.sb-logo .sub{font-size:9.5px;color:var(--gray-400);text-transform:uppercase;letter-spacing:.09em;font-weight:500;margin-top:2px}
+.sb-nav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:1px;overflow-y:auto}
+.nav-section{font-size:9.5px;color:var(--gray-400);text-transform:uppercase;letter-spacing:.09em;font-weight:600;padding:10px 8px 4px}
+.nav-item{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 10px;border-radius:var(--r-sm);
+  color:var(--gray-500);font-size:13px;font-weight:500;
+  cursor:pointer;text-decoration:none;border:none;background:none;
+  width:100%;text-align:left;transition:all var(--tr);
+}
+.nav-item:hover{background:var(--gray-100);color:var(--gray-700)}
+.nav-item.active{background:var(--accent-bg);color:var(--accent)}
+.nav-item svg{flex-shrink:0;width:16px;height:16px}
+.sb-footer{padding:12px 14px;border-top:1px solid var(--gray-100);display:flex;align-items:center;gap:10px}
+.sb-footer .av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;flex-shrink:0}
+.sb-footer .info .name{font-size:12.5px;font-weight:600;color:var(--gray-700)}
+.sb-footer .info .role{font-size:11px;color:var(--gray-400)}
+.sb-footer-links{padding:4px 10px 14px;display:flex;flex-direction:column;gap:1px}
+.sb-footer-links .nav-item{font-size:12.5px;color:var(--gray-400)}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* ── HEADER ── */
+.header{
+  height:60px;background:var(--white);border-bottom:1px solid var(--gray-200);
+  display:flex;align-items:center;padding:0 28px;gap:16px;flex-shrink:0;
+}
+.search-bar{
+  flex:1;max-width:380px;display:flex;align-items:center;gap:8px;
+  background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--r);
+  padding:7px 14px;color:var(--gray-400);font-size:13px;
+}
+.search-bar input{border:none;background:none;outline:none;font-size:13px;color:var(--gray-700);font-family:inherit;width:100%}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.notif-btn{position:relative;width:36px;height:36px;border:none;background:none;cursor:pointer;color:var(--gray-500);display:flex;align-items:center;justify-content:center;border-radius:var(--r-sm)}
+.notif-btn:hover{background:var(--gray-100)}
+.notif-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;background:var(--danger);border-radius:50%;border:2px solid #fff}
+.store-label{font-size:13px;font-weight:500;color:var(--gray-600)}
+.user-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;cursor:pointer}
+
+/* ── CONTENT ── */
+.content{flex:1;overflow-y:auto;padding:30px 28px}
+
+/* ── PAGES ── */
+.page{display:none}.page.active{display:block}
+
+/* ── PAGE HEADER ── */
+.page-title{font-family:'DM Serif Display',serif;font-size:26px;color:var(--gray-800);line-height:1.1}
+.page-sub{font-size:13px;color:var(--gray-400);margin-top:4px}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px}
+.page-header-actions{display:flex;gap:10px;align-items:center}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all var(--tr);font-family:inherit}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent-hover)}
+.btn-outline{background:#fff;color:var(--gray-600);border:1px solid var(--gray-200)}.btn-outline:hover{background:var(--gray-50);border-color:var(--gray-300)}
+
+/* ── CARDS ── */
+.cards-row{display:grid;gap:16px;margin-bottom:22px}
+.cards-4{grid-template-columns:repeat(4,1fr)}
+.cards-3{grid-template-columns:repeat(3,1fr)}
+.card{background:var(--white);border-radius:var(--r-lg);padding:20px;box-shadow:var(--sh)}
+.card-label{font-size:11px;color:var(--gray-400);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:8px}
+.card-value{font-size:24px;font-weight:700;color:var(--gray-800);line-height:1}
+.card-badge{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:20px;margin-bottom:8px}
+.badge-green{background:var(--success-bg);color:var(--success)}
+.badge-red{background:var(--danger-bg);color:var(--danger)}
+.badge-orange{background:var(--orange-bg);color:var(--orange)}
+.badge-blue{background:var(--accent-bg);color:var(--accent)}
+.card-sub{font-size:12px;color:var(--gray-400);margin-top:4px}
+
+/* ── STATUS BADGES ── */
+.status{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600}
+.status::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.7}
+.status-green{background:var(--success-bg);color:var(--success)}
+.status-blue{background:var(--accent-bg);color:var(--accent)}
+.status-orange{background:var(--warning-bg);color:var(--warning)}
+.status-red{background:var(--danger-bg);color:var(--danger)}
+.status-gray{background:var(--gray-100);color:var(--gray-500)}
+
+/* ── TABLE ── */
+.table-wrap{background:var(--white);border-radius:var(--r-lg);box-shadow:var(--sh);overflow:hidden}
+.table-header{padding:18px 20px;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;justify-content:space-between}
+.table-title{font-size:15px;font-weight:700;color:var(--gray-800)}
+.table-sub{font-size:12px;color:var(--gray-400)}
+table{width:100%;border-collapse:collapse}
+thead th{padding:10px 20px;text-align:left;font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--gray-100)}
+tbody tr{border-bottom:1px solid var(--gray-100);transition:background var(--tr)}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--gray-50)}
+td{padding:14px 20px;font-size:13.5px;color:var(--gray-700)}
+.td-mono{font-size:13px;font-weight:600;color:var(--accent)}
+.td-bold{font-weight:600;color:var(--gray-800)}
+.row-actions{display:flex;gap:6px}
+.icon-btn{width:30px;height:30px;border:none;background:none;cursor:pointer;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;color:var(--gray-400);transition:all var(--tr)}
+.icon-btn:hover{background:var(--gray-100);color:var(--gray-600)}
+.icon-btn.danger:hover{background:var(--danger-bg);color:var(--danger)}
+
+/* ── PAGINATION ── */
+.pagination{display:flex;align-items:center;gap:4px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--gray-100)}
+.pag-info{font-size:12.5px;color:var(--gray-500);margin-right:auto}
+.pag-btn{width:30px;height:30px;border:1px solid var(--gray-200);background:#fff;border-radius:var(--r-sm);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;color:var(--gray-600);transition:all var(--tr)}
+.pag-btn:hover{background:var(--gray-50)}
+.pag-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* ── FILTERS ── */
+.filters-row{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.filter-select{display:flex;align-items:center;gap:7px;padding:8px 12px;background:#fff;border:1px solid var(--gray-200);border-radius:var(--r);font-size:13px;color:var(--gray-600);cursor:pointer;font-family:inherit}
+.filter-select select{border:none;background:none;outline:none;font-size:13px;color:var(--gray-600);cursor:pointer;font-family:inherit}
+.filter-date{display:flex;align-items:center;gap:7px;padding:8px 12px;background:#fff;border:1px solid var(--gray-200);border-radius:var(--r);font-size:13px;color:var(--gray-600)}
+.filter-clear{font-size:13px;font-weight:500;color:var(--accent);cursor:pointer;background:none;border:none;font-family:inherit}
+
+/* ── AVATAR ── */
+.av-circle{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+
+/* ─────────────────── DASHBOARD ─────────────────── */
+.dash-grid{display:grid;grid-template-columns:1fr 320px;gap:20px;margin-bottom:22px}
+.chart-card{background:var(--white);border-radius:var(--r-lg);padding:20px;box-shadow:var(--sh)}
+.chart-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+.chart-card-title{font-size:15px;font-weight:700;color:var(--gray-800)}
+.chart-card-sub{font-size:12px;color:var(--gray-400);margin-top:2px}
+.chart-toggle{display:flex;gap:4px}
+.chart-toggle button{padding:4px 10px;border-radius:20px;border:none;font-size:11.5px;font-weight:500;cursor:pointer;font-family:inherit;background:var(--gray-100);color:var(--gray-500);transition:all var(--tr)}
+.chart-toggle button.active{background:var(--primary);color:#fff}
+
+/* Stock Alerts */
+.alerts-card{background:var(--white);border-radius:var(--r-lg);padding:20px;box-shadow:var(--sh)}
+.alerts-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.alerts-title{font-size:15px;font-weight:700;color:var(--gray-800)}
+.urgent-badge{background:var(--danger-bg);color:var(--danger);font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px}
+.alert-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--gray-100)}
+.alert-item:last-of-type{border-bottom:none}
+.alert-img{width:44px;height:44px;border-radius:var(--r-sm);background:var(--gray-100);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px}
+.alert-info{flex:1}.alert-name{font-size:13px;font-weight:600;color:var(--gray-700)}
+.alert-qty{font-size:12px;margin-top:2px}
+.qty-red{color:var(--danger)}.qty-orange{color:var(--warning)}
+.alert-refresh{width:28px;height:28px;border:1px solid var(--gray-200);border-radius:50%;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gray-400);font-size:14px;transition:all var(--tr)}
+.alert-refresh:hover{background:var(--gray-100);transform:rotate(180deg)}
+.ver-inv{width:100%;margin-top:14px;padding:9px;border:1px solid var(--gray-200);background:#fff;border-radius:var(--r);font-size:13px;font-weight:500;color:var(--gray-600);cursor:pointer;font-family:inherit;transition:all var(--tr)}
+.ver-inv:hover{background:var(--gray-50)}
+
+/* ─────────────────── STOCK ─────────────────── */
+.stock-top{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.stock-filters{display:flex;gap:10px;flex:1}
+.stock-value-card{background:var(--primary);color:#fff;border-radius:var(--r-lg);padding:16px 22px;flex-shrink:0;min-width:200px}
+.svc-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;opacity:.7;font-weight:600}
+.svc-value{font-size:24px;font-weight:700;margin:4px 0 2px}
+.svc-sub{font-size:12px;opacity:.7}
+.svc-badge{display:inline-block;background:rgba(255,255,255,.18);color:#fff;font-size:11px;font-weight:600;padding:1px 8px;border-radius:20px;margin-left:6px}
+.prod-thumb{width:40px;height:40px;border-radius:var(--r-sm);background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.prod-name{font-size:13.5px;font-weight:600;color:var(--gray-800)}
+.prod-sku{font-size:11.5px;color:var(--gray-400);margin-top:1px}
+.brand-tag{display:inline-flex;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500;background:var(--gray-100);color:var(--gray-600)}
+
+/* ─────────────────── VENDAS ─────────────────── */
+.vendas-header-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px}
+.vendas-toggles{display:flex;gap:6px}
+.v-toggle{padding:6px 14px;border-radius:var(--r);border:1px solid var(--gray-200);background:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--gray-500);transition:all var(--tr)}
+.v-toggle.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.vendas-cards{display:grid;grid-template-columns:2fr 1fr 1fr;gap:16px;margin-bottom:22px}
+.vcard-main{background:var(--white);border-radius:var(--r-lg);padding:22px;box-shadow:var(--sh)}
+.vcard-big-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--gray-400);margin-bottom:6px}
+.vcard-big-value{font-size:30px;font-weight:700;color:var(--gray-800)}
+.vcard-big-cents{font-size:17px;color:var(--gray-400)}
+.vendas-grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:22px}
+.vendas-chart-card{background:var(--white);border-radius:var(--r-lg);padding:20px;box-shadow:var(--sh)}
+.top-prod-list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.tp-item{display:flex;align-items:center;gap:10px}
+.tp-img{width:36px;height:36px;border-radius:var(--r-sm);background:var(--gray-100);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px}
+.tp-info{flex:1}
+.tp-name{font-size:13px;font-weight:600;color:var(--gray-700)}
+.tp-qty{font-size:12px;color:var(--gray-400)}
+.tp-bar-wrap{flex:1;height:6px;background:var(--gray-100);border-radius:3px;overflow:hidden}
+.tp-bar{height:100%;border-radius:3px;background:var(--accent)}
+.tp-pct{font-size:12px;font-weight:600;color:var(--accent);min-width:32px;text-align:right}
+.donut-wrap{display:flex;align-items:center;justify-content:center;padding:10px 0}
+
+/* ─────────────────── CLIENTES ─────────────────── */
+.clientes-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;background:var(--white);border-radius:var(--r-lg);box-shadow:var(--sh);overflow:hidden;margin-bottom:22px}
+.cstat{padding:22px 24px;border-right:1px solid var(--gray-100)}
+.cstat:last-child{border-right:none}
+.cstat-label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-400);margin-bottom:6px}
+.cstat-value{font-size:26px;font-weight:700;color:var(--gray-800)}
+.cstat-sub{font-size:12px;margin-top:4px}
+.green-sub{color:var(--success)}.orange-sub{color:var(--orange)}
+.client-av{width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0}
+.ver-det{font-size:12.5px;font-weight:600;color:var(--accent);cursor:pointer;background:none;border:none;font-family:inherit;white-space:nowrap}
+.ver-det:hover{text-decoration:underline}
+.float-btn{position:fixed;bottom:28px;right:28px;width:48px;height:48px;background:var(--accent);color:#fff;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh-md);transition:all var(--tr)}
+.float-btn:hover{background:var(--accent-hover);transform:scale(1.08)}
+
+/* ─────────────────── PEDIDOS FORNECEDORES ─────────────────── */
+.pf-tabs{display:flex;gap:0;border-bottom:1px solid var(--gray-200);margin-bottom:20px}
+.pf-tab{padding:10px 20px;font-size:13.5px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;color:var(--gray-500);transition:all var(--tr);background:none;border-top:none;border-left:none;border-right:none;font-family:inherit}
+.pf-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ── ANIMATIONS ── */
+.page.active{animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* ── NOTIFICAÇÕES ── */
+#toast-container{position:fixed;top:18px;right:18px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.toast{background:var(--white);border-radius:var(--r-lg);box-shadow:0 8px 30px rgba(0,0,0,.15);padding:14px 18px;min-width:300px;max-width:360px;display:flex;align-items:flex-start;gap:12px;pointer-events:all;animation:slideIn .3s ease;border-left:4px solid var(--accent)}
+.toast.toast-danger{border-left-color:var(--danger)}
+.toast.toast-warning{border-left-color:var(--warning)}
+.toast-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.toast-body{flex:1}
+.toast-title{font-size:13px;font-weight:700;color:var(--gray-800)}
+.toast-msg{font-size:12.5px;color:var(--gray-500);margin-top:2px}
+.toast-close{background:none;border:none;cursor:pointer;color:var(--gray-400);font-size:16px;padding:0;line-height:1;flex-shrink:0}
+.toast-close:hover{color:var(--gray-700)}
+@keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+#conn-status{position:fixed;bottom:18px;left:calc(var(--sidebar) + 18px);display:flex;align-items:center;gap:7px;background:var(--white);border:1px solid var(--gray-200);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:500;color:var(--gray-500);box-shadow:var(--sh);z-index:500}
+#conn-dot{width:8px;height:8px;border-radius:50%;background:var(--gray-300);transition:background .3s}
+#conn-dot.online{background:var(--success)}
+#conn-dot.offline{background:var(--danger)}
+</style>
+</head>
+<body>
+
+<!-- ── TOAST NOTIFICATIONS ── -->
+<div id="toast-container"></div>
+
+<!-- ── CONNECTION STATUS ── -->
+<div id="conn-status">
+  <div id="conn-dot"></div>
+  <span id="conn-label">A ligar...</span>
+</div>
+
+<div class="app">
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="brand">CalcinhaShop</div>
+    <div class="sub">Footwear ERP</div>
+  </div>
+  <nav class="sb-nav">
+    <button class="nav-item active" onclick="nav('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-item" onclick="nav('stock')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      Stock
+    </button>
+
+    <div class="nav-section">Pedidos</div>
+    <button class="nav-item" onclick="nav('pedidos-clientes')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      Clientes
+    </button>
+    <button class="nav-item" onclick="nav('pedidos-fornecedores')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      Fornecedores
+    </button>
+
+    <button class="nav-item" onclick="nav('vendas')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Vendas
+    </button>
+    <button class="nav-item" onclick="nav('clientes')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Clientes
+    </button>
+  </nav>
+  <div class="sb-footer-links">
+    <button class="nav-item" style="font-size:12.5px;color:var(--gray-400)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Support
+    </button>
+    <button class="nav-item" style="font-size:12.5px;color:var(--gray-400)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Logout
+    </button>
+  </div>
+  <div class="sb-footer">
+    <div class="av">SA</div>
+    <div class="info">
+      <div class="name">Admin Master</div>
+      <div class="role">Admin Account</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="search-bar">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Procurar sapatilhas, pedidos..." />
+    </div>
+    <div class="header-right">
+      <button class="notif-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="notif-dot"></div></button>
+      <span class="store-label" id="headerStore">Loja Principal</span>
+      <div class="user-av" id="headerAv">SA</div>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ══════════════ DASHBOARD ══════════════ -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Visão Geral</div>
+          <div class="page-sub">Bem-vindo de volta ao centro de comando da CalcinhaShop.</div>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn btn-outline">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exportar Relatório
+          </button>
+          <button class="btn btn-primary" onclick="nav('pedidos-clientes')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Novo Pedido
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="cards-row cards-4">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            <span class="card-badge badge-green">+12.5%</span>
+          </div>
+          <div class="card-label" style="margin-top:12px">Total de Vendas</div>
+          <div class="card-value">€24.500</div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            <span class="card-badge badge-green">+4%</span>
+          </div>
+          <div class="card-label" style="margin-top:12px">Número de Pedidos</div>
+          <div class="card-value">154</div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+            <span class="card-badge badge-red">Crítico</span>
+          </div>
+          <div class="card-label" style="margin-top:12px">Baixo Stock</div>
+          <div class="card-value">8</div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            <span class="card-badge badge-green">+8.2%</span>
+          </div>
+          <div class="card-label" style="margin-top:12px">Receita Total</div>
+          <div class="card-value">€12.250</div>
+        </div>
+      </div>
+
+      <!-- Chart + Alerts -->
+      <div class="dash-grid">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">Desempenho Mensal</div>
+              <div class="chart-card-sub">Volume de vendas vs meses anteriores</div>
+            </div>
+            <div class="chart-toggle">
+              <button class="active">Últimos 6 meses</button>
+            </div>
+          </div>
+          <canvas id="dashChart" height="180"></canvas>
+        </div>
+        <div class="alerts-card">
+          <div class="alerts-header">
+            <div class="alerts-title">Alertas de Stock</div>
+            <span class="urgent-badge">Urgente</span>
+          </div>
+          <div class="alert-item">
+            <div class="alert-img">👟</div>
+            <div class="alert-info">
+              <div class="alert-name">Nike Air Max Plus</div>
+              <div class="alert-qty qty-red">2 unidades restantes</div>
+            </div>
+            <button class="alert-refresh" title="Reabastecer">↻</button>
+          </div>
+          <div class="alert-item">
+            <div class="alert-img">👟</div>
+            <div class="alert-info">
+              <div class="alert-name">Adidas Ultraboost 22</div>
+              <div class="alert-qty qty-red">1 unidade restante</div>
+            </div>
+            <button class="alert-refresh">↻</button>
+          </div>
+          <div class="alert-item">
+            <div class="alert-img">🥿</div>
+            <div class="alert-info">
+              <div class="alert-name">Puma Suede Classic</div>
+              <div class="alert-qty qty-orange">5 unidades (Baixo)</div>
+            </div>
+            <button class="alert-refresh">↻</button>
+          </div>
+          <button class="ver-inv" onclick="nav('stock')">Ver Todo o Inventário</button>
+        </div>
+      </div>
+
+      <!-- Recent Orders -->
+      <div class="table-wrap">
+        <div class="table-header">
+          <div>
+            <div class="table-title">Pedidos Recentes</div>
+            <div class="table-sub">Gestão e acompanhamento em tempo real</div>
+          </div>
+          <button class="btn btn-outline" style="font-size:12.5px" onclick="nav('pedidos-clientes')">Ver todos os pedidos →</button>
+        </div>
+        <table>
+          <thead><tr><th>Pedido ID</th><th>Produto</th><th>Cliente</th><th>Status</th><th>Total</th></tr></thead>
+          <tbody>
+            <tr><td><span class="td-mono">#SA-9284</span></td><td>Nike Dunk Low Retro</td><td>João Silva</td><td><span class="status status-blue">Em Processamento</span></td><td class="td-bold">€109,99</td></tr>
+            <tr><td><span class="td-mono">#SA-9283</span></td><td>Adidas Forum Mid</td><td>Maria Santos</td><td><span class="status status-green">Enviado</span></td><td class="td-bold">€120,00</td></tr>
+            <tr><td><span class="td-mono">#SA-9282</span></td><td>Puma RS-X Efekt</td><td>Ricardo Pereira</td><td><span class="status status-green">Enviado</span></td><td class="td-bold">€135,00</td></tr>
+            <tr><td><span class="td-mono">#SA-9281</span></td><td>New Balance 550</td><td>Ana Costa</td><td><span class="status status-orange">Pendente</span></td><td class="td-bold">€95,00</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════ STOCK ══════════════ -->
+    <div class="page" id="page-stock">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Gestão de Stock</div>
+          <div class="page-sub">Controlo detalhado do inventário de calçado.</div>
+        </div>
+        <button class="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Adicionar Produto
+        </button>
+      </div>
+
+      <div class="stock-top">
+        <div class="stock-filters">
+          <div class="filter-select">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            <select><option>Todas as Marcas</option><option>Nike</option><option>Adidas</option><option>New Balance</option><option>Puma</option></select>
+          </div>
+          <div class="filter-select">
+            <select><option>Todos os Tipos</option><option>Sapatilha</option><option>Sapato</option><option>Bota</option></select>
+          </div>
+          <button class="icon-btn" style="border:1px solid var(--gray-200);width:36px;height:36px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+          </button>
+        </div>
+        <div class="stock-value-card">
+          <div class="svc-label">Valor Total Stock</div>
+          <div class="svc-value">€42.850,00</div>
+          <div class="svc-sub">1.240 Unidades <span class="svc-badge">+4,5% esta semana</span></div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Produto</th><th>Marca</th><th>Tamanho</th><th>Stock</th><th>Preço</th><th>Estado</th><th></th></tr></thead>
+          <tbody>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:12px"><div class="prod-thumb">👟</div><div><div class="prod-name">Nike Air Max 270</div><div class="prod-sku">SKU: NK-AM270-001</div></div></div></td>
+              <td><span class="brand-tag">Nike</span></td><td>42</td><td>18</td><td class="td-bold">€149,90</td>
+              <td><span class="status status-green">En stock</span></td>
+              <td><div class="row-actions"><button class="icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:12px"><div class="prod-thumb">🥿</div><div><div class="prod-name">Adidas Ultraboost 22</div><div class="prod-sku">SKU: AD-UB22-045</div></div></div></td>
+              <td><span class="brand-tag">Adidas</span></td><td>40</td><td>3</td><td class="td-bold">€189,00</td>
+              <td><span class="status status-orange">Baixo stock</span></td>
+              <td><div class="row-actions"><button class="icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:12px"><div class="prod-thumb">👟</div><div><div class="prod-name">New Balance 550</div><div class="prod-sku">SKU: NB-550-NY</div></div></div></td>
+              <td><span class="brand-tag">New Balance</span></td><td>43</td><td>0</td><td class="td-bold">€120,00</td>
+              <td><span class="status status-red">Esgotado</span></td>
+              <td><div class="row-actions"><button class="icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></div></td>
+            </tr>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:12px"><div class="prod-thumb">🥾</div><div><div class="prod-name">Puma Suede Classic</div><div class="prod-sku">SKU: PU-SD-BK</div></div></div></td>
+              <td><span class="brand-tag">Puma</span></td><td>41</td><td>24</td><td class="td-bold">€85,00</td>
+              <td><span class="status status-green">En stock</span></td>
+              <td><div class="row-actions"><button class="icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></div></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="pagination">
+          <span class="pag-info">A mostrar 4 de 142 produtos</span>
+          <button class="pag-btn">‹</button>
+          <button class="pag-btn active">1</button>
+          <button class="pag-btn">2</button>
+          <button class="pag-btn">3</button>
+          <button class="pag-btn">›</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ PEDIDOS CLIENTES ══════════════ -->
+    <div class="page" id="page-pedidos-clientes">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Pedidos</div>
+          <div class="page-sub">Gerencie as transações e o fluxo de saída de mercadorias.</div>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn btn-outline">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exportar CSV
+          </button>
+          <button class="btn btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Novo Pedido
+          </button>
+        </div>
+      </div>
+
+      <div class="filters-row">
+        <div class="filter-date">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Data: 01/01/2024 – 31/01/2024
+        </div>
+        <div class="filter-select">
+          <select><option>Todos os Estados</option><option>Concluído</option><option>Enviado</option><option>Pendente</option></select>
+        </div>
+        <button class="filter-clear">Limpar Filtros</button>
+        <div style="margin-left:auto">
+          <div style="background:var(--primary);color:#fff;border-radius:var(--r-lg);padding:10px 18px;display:flex;align-items:center;gap:12px">
+            <div>
+              <div style="font-size:10px;opacity:.7;text-transform:uppercase;letter-spacing:.07em">Volume Diário</div>
+              <div style="font-size:18px;font-weight:700">128 Pedidos</div>
+            </div>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2"><rect x="2" y="2" width="4" height="20" rx="1"/><rect x="10" y="8" width="4" height="14" rx="1"/><rect x="18" y="4" width="4" height="18" rx="1"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID do Pedido</th><th>Cliente</th><th>Data</th><th>Estado</th><th>Total</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="td-mono">#4829</span></td>
+              <td><div style="display:flex;align-items:center;gap:10px"><div class="av-circle" style="background:linear-gradient(135deg,#667eea,#764ba2);font-size:11px">AM</div><div><div style="font-weight:600;font-size:13px">Ana Martins</div><div style="font-size:11.5px;color:var(--gray-400)">ana.martins@email.com</div></div></div></td>
+              <td>24 Out 2023</td><td><span class="status status-green">Concluído</span></td><td class="td-bold">€549,90</td>
+            </tr>
+            <tr>
+              <td><span class="td-mono">#4830</span></td>
+              <td><div style="display:flex;align-items:center;gap:10px"><div class="av-circle" style="background:linear-gradient(135deg,#f093fb,#f5576c);font-size:11px">MO</div><div><div style="font-weight:600;font-size:13px">Marcos Oliveira</div><div style="font-size:11.5px;color:var(--gray-400)">m.oliveira@empresa.com</div></div></div></td>
+              <td>25 Out 2023</td><td><span class="status status-blue">Enviado</span></td><td class="td-bold">€1.280,00</td>
+            </tr>
+            <tr>
+              <td><span class="td-mono">#4831</span></td>
+              <td><div style="display:flex;align-items:center;gap:10px"><div class="av-circle" style="background:linear-gradient(135deg,#4facfe,#00f2fe);font-size:11px">FS</div><div><div style="font-weight:600;font-size:13px">Fernanda Souza</div><div style="font-size:11.5px;color:var(--gray-400)">fe.souza@webmail.com</div></div></div></td>
+              <td>25 Out 2023</td><td><span class="status status-orange">Pendente</span></td><td class="td-bold">€315,40</td>
+            </tr>
+            <tr>
+              <td><span class="td-mono">#4832</span></td>
+              <td><div style="display:flex;align-items:center;gap:10px"><div class="av-circle" style="background:linear-gradient(135deg,#43e97b,#38f9d7);font-size:11px">JL</div><div><div style="font-weight:600;font-size:13px">João Lima</div><div style="font-size:11.5px;color:var(--gray-400)">joaolima@servidor.com</div></div></div></td>
+              <td>26 Out 2023</td><td><span class="status status-orange">Pendente</span></td><td class="td-bold">€890,00</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="pagination">
+          <span class="pag-info">Mostrando 1-4 de 128 pedidos encontrados</span>
+          <button class="pag-btn">‹</button>
+          <button class="pag-btn active">1</button>
+          <button class="pag-btn">2</button>
+          <button class="pag-btn">3</button>
+          <button class="pag-btn">›</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ PEDIDOS FORNECEDORES ══════════════ -->
+    <div class="page" id="page-pedidos-fornecedores">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Pedidos a Fornecedores</div>
+          <div class="page-sub">Gerenciamento de pedidos e suprimentos da cadeia logística.</div>
+        </div>
+        <button class="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          Novo Pedido ao Fornecedor
+        </button>
+      </div>
+
+      <div class="cards-row cards-4" style="margin-bottom:22px">
+        <div class="card">
+          <div class="card-label">Total Pedidos (Mês)</div>
+          <div class="card-value">128 <span style="font-size:13px;color:var(--success);font-weight:500">↗ 12%</span></div>
+        </div>
+        <div class="card" style="border-left:3px solid var(--warning)">
+          <div class="card-label">Pedidos Pendentes</div>
+          <div class="card-value" style="color:var(--warning)">34</div>
+          <div class="card-sub">Aguardando entrega</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Volume Total</div>
+          <div class="card-value">€452k</div>
+          <div class="card-sub">Investimento estoque</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Eficiência Supplier</div>
+          <div class="card-value" style="color:var(--success)">98.2%</div>
+          <div class="card-sub">On-time delivery</div>
+        </div>
+      </div>
+
+      <div class="pf-tabs">
+        <button class="pf-tab active" onclick="pfTab(this,'pf-pendentes')">Pedidos Pendentes</button>
+        <button class="pf-tab" onclick="pfTab(this,'pf-concluidos')">Pedidos Concluídos</button>
+      </div>
+
+      <div id="pf-pendentes">
+        <div class="filters-row">
+          <div class="filter-select">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+            <select><option>Todos os Fornecedores</option><option>Nike Service</option><option>Adidas Global</option><option>Puma Distribution</option><option>NB Supply Co.</option></select>
+          </div>
+          <div class="filter-date">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Data: Últimos 30 dias
+          </div>
+          <div style="margin-left:auto">
+            <button class="btn btn-outline" style="font-size:12.5px">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Exportar Relatório
+            </button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID do Pedido</th><th>Fornecedor</th><th>Data</th><th>Itens</th><th>Valor Total</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr><td><span class="td-mono">#ORD-2024-9421</span></td><td><div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">👟</span><span style="font-weight:600">Nike Service</span></div></td><td>14 Out, 2023</td><td>420 pares</td><td class="td-bold">€124.500,00</td><td><span class="status status-orange">Pendente</span></td></tr>
+              <tr><td><span class="td-mono">#ORD-2024-9418</span></td><td><div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">🥿</span><span style="font-weight:600">Adidas Global</span></div></td><td>12 Out, 2023</td><td>150 pares</td><td class="td-bold">€38.200,00</td><td><span class="status status-orange">Pendente</span></td></tr>
+              <tr><td><span class="td-mono">#ORD-2024-9415</span></td><td><div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">👞</span><span style="font-weight:600">Puma Distribution</span></div></td><td>11 Out, 2023</td><td>85 pares</td><td class="td-bold">€12.900,00</td><td><span class="status status-green">Concluído</span></td></tr>
+              <tr><td><span class="td-mono">#ORD-2024-9412</span></td><td><div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">👟</span><span style="font-weight:600">NB Supply Co.</span></div></td><td>09 Out, 2023</td><td>310 pares</td><td class="td-bold">€89.000,00</td><td><span class="status status-orange">Pendente</span></td></tr>
+            </tbody>
+          </table>
+          <div class="pagination">
+            <span class="pag-info">Mostrando 1-4 de 128 pedidos</span>
+            <button class="pag-btn">‹</button>
+            <button class="pag-btn active">1</button>
+            <button class="pag-btn">2</button>
+            <button class="pag-btn">3</button>
+            <button class="pag-btn">›</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="pf-concluidos" style="display:none">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID do Pedido</th><th>Fornecedor</th><th>Data</th><th>Itens</th><th>Valor Total</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr><td><span class="td-mono">#ORD-2024-9400</span></td><td><div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">👟</span><span style="font-weight:600">Nike Service</span></div></td><td>01 Out, 2023</td><td>200 pares</td><td class="td-bold">€58.000,00</td><td><span class="status status-green">Concluído</span></td></tr>
+              <tr><td><span class="td-mono">#ORD-2024-9398</span></td><td><div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">🥿</span><span style="font-weight:600">Adidas Global</span></div></td><td>28 Set, 2023</td><td>95 pares</td><td class="td-bold">€19.800,00</td><td><span class="status status-green">Concluído</span></td></tr>
+            </tbody>
+          </table>
+          <div class="pagination">
+            <span class="pag-info">Mostrando 1-2 de 56 pedidos</span>
+            <button class="pag-btn">‹</button>
+            <button class="pag-btn active">1</button>
+            <button class="pag-btn">2</button>
+            <button class="pag-btn">›</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ VENDAS ══════════════ -->
+    <div class="page" id="page-vendas">
+      <div class="vendas-header-row">
+        <div>
+          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:4px">Performance Comercial</div>
+          <div class="page-title">Análise de Vendas</div>
+        </div>
+        <div class="vendas-toggles">
+          <button class="v-toggle">Dia</button>
+          <button class="v-toggle">Semana</button>
+          <button class="v-toggle active">Mês</button>
+        </div>
+      </div>
+
+      <div class="vendas-cards">
+        <div class="vcard-main">
+          <div class="vcard-big-label">Receita Total</div>
+          <div style="display:flex;align-items:flex-end;gap:6px;margin-bottom:4px">
+            <div class="vcard-big-value">€142.850<span class="vcard-big-cents">,00</span></div>
+            <span class="card-badge badge-green" style="margin-bottom:6px">+12.5%</span>
+          </div>
+          <canvas id="vendas-mini-chart" height="60"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-label">Número de Vendas</div>
+          <div class="card-value" style="margin-top:20px">1.284</div>
+          <div class="card-sub">Ticket médio: €111.25</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Taxa de Conversão</div>
+          <div class="card-value" style="margin-top:20px">3.4%</div>
+          <div style="height:4px;background:var(--gray-100);border-radius:2px;margin-top:10px;overflow:hidden"><div style="width:34%;height:100%;background:var(--warning);border-radius:2px"></div></div>
+        </div>
+      </div>
+
+      <div class="vendas-grid2">
+        <div class="vendas-chart-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div style="font-size:14px;font-weight:700">Volume de Vendas Semanal</div>
+            <div style="display:flex;align-items:center;gap:14px;font-size:12px;color:var(--gray-500)">
+              <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block"></span>E-commerce</span>
+              <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:var(--warning);display:inline-block"></span>Loja Física</span>
+            </div>
+          </div>
+          <canvas id="vendas-semanal-chart" height="160"></canvas>
+        </div>
+        <div class="vendas-chart-card">
+          <div style="font-size:14px;font-weight:700;margin-bottom:4px">Produtos mais vendidos</div>
+          <div class="donut-wrap"><canvas id="donut-chart" width="140" height="140"></canvas></div>
+          <div class="top-prod-list">
+            <div class="tp-item"><div class="tp-img">👟</div><div class="tp-info"><div class="tp-name">Sapatilha Velvet Rose</div><div class="tp-qty">342 vendas</div></div><div class="tp-bar-wrap"><div class="tp-bar" style="width:32%"></div></div><div class="tp-pct">32%</div></div>
+            <div class="tp-item"><div class="tp-img">👟</div><div class="tp-info"><div class="tp-name">Classic White Sneaker</div><div class="tp-qty">302 vendas</div></div><div class="tp-bar-wrap"><div class="tp-bar" style="width:24%"></div></div><div class="tp-pct">24%</div></div>
+            <div class="tp-item"><div class="tp-img">👞</div><div class="tp-info"><div class="tp-name">Mocassim Urban Tan</div><div class="tp-qty">142 vendas</div></div><div class="tp-bar-wrap"><div class="tp-bar" style="width:18%;background:var(--warning)"></div></div><div class="tp-pct" style="color:var(--warning)">18%</div></div>
+            <div class="tp-item"><div class="tp-img">🥾</div><div class="tp-info"><div class="tp-name">Bota Chelsea Suede</div><div class="tp-qty">99 vendas</div></div><div class="tp-bar-wrap"><div class="tp-bar" style="width:12%;background:var(--success)"></div></div><div class="tp-pct" style="color:var(--success)">12%</div></div>
+            <div class="tp-item"><div class="tp-img">🥿</div><div class="tp-info"><div class="tp-name">Flat Black Diamond</div><div class="tp-qty">74 vendas</div></div><div class="tp-bar-wrap"><div class="tp-bar" style="width:10%;background:var(--orange)"></div></div><div class="tp-pct" style="color:var(--orange)">10%</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-header">
+          <div class="table-title">Últimas Transações</div>
+          <button class="btn btn-outline" style="font-size:12.5px">Ver relatório completo →</button>
+        </div>
+        <table>
+          <thead><tr><th>ID Pedido</th><th>Cliente</th><th>Data</th><th>Status</th><th>Valor</th></tr></thead>
+          <tbody>
+            <tr><td><span class="td-mono">#SOA-8842</span></td><td>Mariana Silva</td><td>Hoje, 14:32</td><td><span class="status status-green">Finalizado</span></td><td class="td-bold">€299,90</td></tr>
+            <tr><td><span class="td-mono">#SOA-8841</span></td><td>Roberto Alencar</td><td>Hoje, 13:15</td><td><span class="status status-green">Finalizado</span></td><td class="td-bold">€189,00</td></tr>
+            <tr><td><span class="td-mono">#SOA-8840</span></td><td>Juliana Costa</td><td>Hoje, 11:45</td><td><span class="status status-blue">Processando</span></td><td class="td-bold">€442,15</td></tr>
+            <tr><td><span class="td-mono">#SOA-8839</span></td><td>Lucas Mendes</td><td>Hoje, 09:22</td><td><span class="status status-red">Cancelado</span></td><td class="td-bold">€310,00</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════ CLIENTES ══════════════ -->
+    <div class="page" id="page-clientes">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Gestão de Clientes</div>
+          <div class="page-sub">Visualize e gira a base de dados de clientes registados na loja.</div>
+        </div>
+        <div class="page-header-actions">
+          <div style="text-align:right;margin-right:4px">
+            <div style="font-size:11px;color:var(--gray-400);text-transform:uppercase;letter-spacing:.07em">Total Clientes</div>
+            <div style="font-size:20px;font-weight:700;color:var(--gray-800)">1.284</div>
+          </div>
+          <button class="btn btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Novo Cliente
+          </button>
+        </div>
+      </div>
+
+      <div class="clientes-stats">
+        <div class="cstat" style="border-left:3px solid var(--accent)">
+          <div class="cstat-label">Taxa de Retenção</div>
+          <div class="cstat-value">68.4%</div>
+          <div class="cstat-sub green-sub">↗ +2.4% este mês</div>
+        </div>
+        <div class="cstat">
+          <div class="cstat-label">Média de Gasto</div>
+          <div class="cstat-value">€142.50</div>
+          <div class="cstat-sub" style="color:var(--gray-400)">Baseado em 4.2k pedidos</div>
+        </div>
+        <div class="cstat" style="border-left:3px solid var(--orange)">
+          <div class="cstat-label">Novos Clientes</div>
+          <div class="cstat-value">42</div>
+          <div class="cstat-sub orange-sub">Últimos 7 dias</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Cliente</th><th>Email</th><th>Data de Registo</th><th>Nº Pedidos</th><th>Total Gasto</th><th>Ações</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:10px"><div class="av-circle" style="background:linear-gradient(135deg,#667eea,#764ba2)">RA</div><span style="font-weight:600">Ricardo Almeida</span></div></td>
+              <td style="color:var(--gray-500)">r.almeida@example.com</td><td>12 Out 2023</td>
+              <td><span style="background:var(--accent-bg);color:var(--accent);font-weight:700;padding:2px 9px;border-radius:20px;font-size:12px">12</span></td>
+              <td class="td-bold">€1.240,00</td><td><button class="ver-det">Ver Detalhes</button></td>
+            </tr>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:10px"><div class="av-circle" style="background:linear-gradient(135deg,#f093fb,#f5576c)">BS</div><span style="font-weight:600">Beatriz Santos</span></div></td>
+              <td style="color:var(--gray-500)">beatriz.s@webmail.pt</td><td>05 Nov 2023</td>
+              <td><span style="background:var(--accent-bg);color:var(--accent);font-weight:700;padding:2px 9px;border-radius:20px;font-size:12px">08</span></td>
+              <td class="td-bold">€854,20</td><td><button class="ver-det">Ver Detalhes</button></td>
+            </tr>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:10px"><div class="av-circle" style="background:linear-gradient(135deg,#4facfe,#00f2fe)">AM</div><span style="font-weight:600">André Martins</span></div></td>
+              <td style="color:var(--gray-500)">amartins@corp.pt</td><td>21 Nov 2023</td>
+              <td><span style="background:var(--accent-bg);color:var(--accent);font-weight:700;padding:2px 9px;border-radius:20px;font-size:12px">03</span></td>
+              <td class="td-bold">€310,00</td><td><button class="ver-det">Ver Detalhes</button></td>
+            </tr>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:10px"><div class="av-circle" style="background:linear-gradient(135deg,#43e97b,#38f9d7)">CO</div><span style="font-weight:600">Catarina Oliveira</span></div></td>
+              <td style="color:var(--gray-500)">cat.oliveira@gmail.com</td><td>15 Dez 2023</td>
+              <td><span style="background:var(--accent-bg);color:var(--accent);font-weight:700;padding:2px 9px;border-radius:20px;font-size:12px">15</span></td>
+              <td class="td-bold">€2.410,50</td><td><button class="ver-det">Ver Detalhes</button></td>
+            </tr>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:10px"><div class="av-circle" style="background:linear-gradient(135deg,#fa709a,#fee140)">JP</div><span style="font-weight:600">João Pereira</span></div></td>
+              <td style="color:var(--gray-500)">jpereira@outlook.com</td><td>02 Jan 2024</td>
+              <td><span style="background:var(--danger-bg);color:var(--danger);font-weight:700;padding:2px 9px;border-radius:20px;font-size:12px">01</span></td>
+              <td class="td-bold">€89,00</td><td><button class="ver-det">Ver Detalhes</button></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="pagination">
+          <span class="pag-info">Mostrando 1-5 de 1.284 clientes</span>
+          <button class="pag-btn">‹</button>
+          <button class="pag-btn active">1</button>
+          <button class="pag-btn">2</button>
+          <button class="pag-btn">3</button>
+          <button class="pag-btn">…</button>
+          <button class="pag-btn">257</button>
+          <button class="pag-btn">›</button>
+        </div>
+      </div>
+      <button class="float-btn" title="Enviar mensagem">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      </button>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+// ── NAVIGATION ──
+function nav(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+
+  const map = {
+    'dashboard': 0, 'stock': 1,
+    'pedidos-clientes': 2, 'pedidos-fornecedores': 3,
+    'vendas': 4, 'clientes': 5
+  };
+  const items = document.querySelectorAll('.nav-item');
+  if (items[map[page]]) items[map[page]].classList.add('active');
+
+  // Update search placeholder
+  const placeholders = {
+    'dashboard': 'Procurar sapatilhas, pedidos...',
+    'stock': 'Procurar sapatilhas...',
+    'pedidos-clientes': 'Buscar pedidos, clientes ou SKUs...',
+    'pedidos-fornecedores': 'Search orders, suppliers or SKU...',
+    'vendas': 'Pesquisar transações...',
+    'clientes': 'Procurar clientes por nome, email ou ID...'
+  };
+  document.getElementById('searchInput').placeholder = placeholders[page] || 'Procurar...';
+
+  // Update header store label
+  const stores = {
+    'dashboard': 'Loja Principal',
+    'stock': 'Alexandre Silva',
+    'pedidos-clientes': 'SoleArchitect ERP',
+    'pedidos-fornecedores': 'SoleArchitect ERP',
+    'vendas': 'SoleArchitect ERP',
+    'clientes': 'SoleArchitect ERP'
+  };
+  document.getElementById('headerStore').textContent = stores[page];
+
+  // Init charts lazily
+  if (page === 'dashboard') initDashChart();
+  if (page === 'vendas') initVendasCharts();
+}
+
+// ── SUPPLIER TABS ──
+function pfTab(btn, id) {
+  document.querySelectorAll('.pf-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('pf-pendentes').style.display = 'none';
+  document.getElementById('pf-concluidos').style.display = 'none';
+  document.getElementById(id).style.display = 'block';
+}
+
+// ── VENDAS TOGGLES ──
+document.querySelectorAll('.v-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.v-toggle').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// ── CHARTS ──
+let dashChartInst, vendasInst, semanalInst, donutInst, miniInst;
+
+function initDashChart() {
+  if (dashChartInst) return;
+  const ctx = document.getElementById('dashChart').getContext('2d');
+  dashChartInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['JAN','FEV','MAR','ABR','MAI','JUN'],
+      datasets: [{
+        data: [8200, 10500, 9800, 13400, 11200, 15800],
+        backgroundColor: (ctx) => ctx.dataIndex === 3 ? '#2563eb' : '#dbeafe',
+        borderRadius: 6, borderSkipped: false
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#94a3b8' } },
+        y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 }, color: '#94a3b8', callback: v => '€' + (v/1000).toFixed(0) + 'k' } }
+      }
+    }
+  });
+}
+
+function initVendasCharts() {
+  if (vendasInst) return;
+
+  // Mini bar chart
+  const mc = document.getElementById('vendas-mini-chart').getContext('2d');
+  miniInst = new Chart(mc, {
+    type: 'bar',
+    data: {
+      labels: ['','','','','','',''],
+      datasets: [{ data: [60,80,55,90,70,100,85], backgroundColor: '#dbeafe', borderRadius: 3 }]
+    },
+    options: { plugins:{legend:{display:false}}, scales:{x:{display:false},y:{display:false}}, animation:{duration:600} }
+  });
+
+  // Semanal
+  const sc = document.getElementById('vendas-semanal-chart').getContext('2d');
+  semanalInst = new Chart(sc, {
+    type: 'bar',
+    data: {
+      labels: ['SEG','TER','QUA','QUI','SEX','SÁB','DOM'],
+      datasets: [
+        { label:'E-commerce', data:[320,410,280,490,380,510,290], backgroundColor:'#2563eb', borderRadius:4 },
+        { label:'Loja Física', data:[180,220,160,310,200,280,150], backgroundColor:'#fcd34d', borderRadius:4 }
+      ]
+    },
+    options: {
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ grid:{display:false}, ticks:{font:{size:11},color:'#94a3b8'} },
+        y:{ grid:{color:'#f1f5f9'}, ticks:{font:{size:11},color:'#94a3b8'} }
+      }
+    }
+  });
+
+  // Donut
+  const dc = document.getElementById('donut-chart').getContext('2d');
+  donutInst = new Chart(dc, {
+    type: 'doughnut',
+    data: {
+      datasets: [{
+        data: [32,24,18,12,10,4],
+        backgroundColor: ['#2563eb','#60a5fa','#fbbf24','#16a34a','#ea580c','#94a3b8'],
+        borderWidth: 2, borderColor:'#fff'
+      }]
+    },
+    options: {
+      cutout:'70%', plugins:{legend:{display:false}},
+      plugins: { legend:{display:false}, tooltip:{callbacks:{label: ctx => ctx.parsed+'%'}} }
+    }
+  });
+}
+
+// ── INIT ──
+initDashChart();
+
+// ══════════════════════════════════════
+//  WEBSOCKET — Ligação ao servidor
+// ══════════════════════════════════════
+const API_URL = 'http://localhost:5000';
+const socket = io(API_URL, { transports: ['websocket', 'polling'] });
+
+const connDot   = document.getElementById('conn-dot');
+const connLabel = document.getElementById('conn-label');
+
+socket.on('connect', () => {
+  connDot.className = 'online';
+  connLabel.textContent = 'Servidor ligado';
+});
+socket.on('disconnect', () => {
+  connDot.className = 'offline';
+  connLabel.textContent = 'Servidor desligado';
+});
+
+socket.on('nova_compra', (data) => {
+  prependPedidoDashboard(data);
+  showToast('🛒', 'Nova Compra Recebida!',
+    data.cliente_nome + ' — €' + parseFloat(data.total).toFixed(2) + ' (Pedido #' + data.venda_id + ')',
+    'accent');
+});
+
+socket.on('alerta_stock', (data) => {
+  const tipo = data.urgente ? 'danger' : 'warning';
+  const icon = data.urgente ? '🚨' : '⚠️';
+  showToast(icon,
+    data.urgente ? 'Stock Crítico!' : 'Stock Baixo',
+    data.nome + ' — apenas ' + data.stock_restante + ' unidade(s) restante(s)',
+    tipo);
+  updateAlertaSidebar(data);
+});
+
+// ══════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════
+function showToast(icon, title, msg, type) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast' + (type === 'danger' ? ' toast-danger' : type === 'warning' ? ' toast-warning' : '');
+  toast.innerHTML = '<div class="toast-icon">' + icon + '</div><div class="toast-body"><div class="toast-title">' + title + '</div><div class="toast-msg">' + msg + '</div></div><button class="toast-close" onclick="this.parentElement.remove()">×</button>';
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity .3s'; setTimeout(() => toast.remove(), 300); }, 6000);
+}
+
+// ══════════════════════════════════════
+//  ATUALIZA DASHBOARD em tempo real
+// ══════════════════════════════════════
+function prependPedidoDashboard(data) {
+  const tbody = document.querySelector('#page-dashboard table tbody');
+  if (!tbody) return;
+  const primeiroItem = data.itens && data.itens[0] ? data.itens[0].nome : '—';
+  const extra = data.itens.length > 1 ? ' + ' + (data.itens.length - 1) + ' mais' : '';
+  const tr = document.createElement('tr');
+  tr.style.animation = 'fadeIn .4s ease';
+  tr.innerHTML = '<td><span class="td-mono">#SA-' + data.venda_id + '</span></td><td>' + primeiroItem + extra + '</td><td>' + data.cliente_nome + '</td><td><span class="status status-blue">Em Processamento</span></td><td class="td-bold">€' + parseFloat(data.total).toFixed(2) + '</td>';
+  tbody.insertBefore(tr, tbody.firstChild);
+  while (tbody.rows.length > 4) tbody.deleteRow(tbody.rows.length - 1);
+}
+
+function updateAlertaSidebar(data) {
+  const card = document.querySelector('#page-dashboard .cards-row .card:nth-child(3) .card-value');
+  if (card) { const atual = parseInt(card.textContent) || 0; card.textContent = atual + 1; }
+}
+
+</script>
+</body>
+</html>
