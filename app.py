@@ -275,4 +275,4 @@ if __name__ == '__main__':
     print("  CalcinhaShop API a arrancar...")
     print(f"  http://localhost:{port}")
     print("=" * 50)
-    socketio.run(app, host='0.0.0.0', port=port, debug=debug_mode)
+    socketio.run(app, host='0.0.0.0', port=port, debug=debug_mode, allow_unsafe_werkzeug=True)
