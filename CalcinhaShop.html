@@ -1030,7 +1030,7 @@ initDashChart();
 // ══════════════════════════════════════
 //  WEBSOCKET — Ligação ao servidor
 // ══════════════════════════════════════
-const API_URL = 'http://localhost:5000';
+const API_URL = 'https://trabalho-isi-production.up.railway.app';
 const socket = io(API_URL, { transports: ['websocket', 'polling'] });
 
 const connDot   = document.getElementById('conn-dot');
