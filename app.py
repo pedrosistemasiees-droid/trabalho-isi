@@ -43,9 +43,92 @@ def build_db_config():
 
 DB_CONFIG = build_db_config()
 INTEGRATION_API_KEY = os.getenv('INTEGRATION_API_KEY', '').strip()
+SCHEMA_READY = False
+
+SAMPLE_PRODUCTS = [
+    ('Nike Air Max 270', 'NK-AM270-001', 'Nike', 42, 18, 149.90),
+    ('Adidas Ultraboost 22', 'AD-UB22-045', 'Adidas', 40, 3, 189.00),
+    ('New Balance 550', 'NB-550-NY', 'New Balance', 43, 0, 120.00),
+    ('Puma Suede Classic', 'PU-SD-BK', 'Puma', 41, 24, 85.00),
+    ('Nike Dunk Low Retro', 'NK-DL-RET', 'Nike', 44, 12, 109.99),
+    ('Adidas Forum Mid', 'AD-FM-WHT', 'Adidas', 41, 8, 120.00),
+    ('Puma RS-X Efekt', 'PU-RSX-EF', 'Puma', 43, 2, 135.00),
+]
+
+
+def ensure_database_schema(db):
+    global SCHEMA_READY
+
+    if SCHEMA_READY:
+        return
+
+    cursor = db.cursor()
+
+    try:
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS produtos (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nome VARCHAR(150) NOT NULL,
+                sku VARCHAR(50) NOT NULL UNIQUE,
+                marca VARCHAR(80),
+                tamanho INT,
+                stock INT NOT NULL DEFAULT 0,
+                preco DECIMAL(10,2) NOT NULL,
+                estado ENUM('em_stock','baixo_stock','esgotado')
+                    GENERATED ALWAYS AS (
+                        CASE
+                            WHEN stock = 0 THEN 'esgotado'
+                            WHEN stock <= 5 THEN 'baixo_stock'
+                            ELSE 'em_stock'
+                        END
+                    ) STORED
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS vendas (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                cliente_nome VARCHAR(150),
+                cliente_email VARCHAR(150),
+                total DECIMAL(10,2) NOT NULL,
+                data_hora DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS venda_itens (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                venda_id INT NOT NULL,
+                produto_id INT NOT NULL,
+                quantidade INT NOT NULL,
+                preco_unitario DECIMAL(10,2) NOT NULL,
+                FOREIGN KEY (venda_id) REFERENCES vendas(id),
+                FOREIGN KEY (produto_id) REFERENCES produtos(id)
+            )
+        """)
+
+        cursor.execute("SELECT COUNT(*) FROM produtos")
+        total_produtos = cursor.fetchone()[0]
+
+        if total_produtos == 0:
+            cursor.executemany(
+                """
+                INSERT INTO produtos (nome, sku, marca, tamanho, stock, preco)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                """,
+                SAMPLE_PRODUCTS,
+            )
+
+        db.commit()
+        SCHEMA_READY = True
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        cursor.close()
 
 def get_db():
-    return mysql.connector.connect(**DB_CONFIG)
+    db = mysql.connector.connect(**DB_CONFIG)
+    ensure_database_schema(db)
+    return db
 
 
 @app.route('/api/health', methods=['GET'])
