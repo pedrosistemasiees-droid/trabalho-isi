@@ -20,8 +20,16 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 # ── CONFIGURAÇÃO DA BASE DE DADOS ──
 # Lê variáveis de ambiente para facilitar deploy no Railway/Render/etc.
+def env_first(*names, default=None):
+    for name in names:
+        value = os.getenv(name)
+        if value:
+            return value
+    return default
+
+
 def build_db_config():
-    mysql_url = os.getenv('MYSQL_URL')
+    mysql_url = env_first('MYSQL_URL', 'DATABASE_URL')
     if mysql_url:
         parsed = urlparse(mysql_url)
         return {
@@ -33,11 +41,11 @@ def build_db_config():
         }
 
     return {
-        'host': os.getenv('DB_HOST', 'localhost'),
-        'port': int(os.getenv('DB_PORT', '3306')),
-        'user': os.getenv('DB_USER', 'root'),
-        'password': os.getenv('DB_PASSWORD', ''),
-        'database': os.getenv('DB_NAME', 'calcinashop'),
+        'host': env_first('DB_HOST', 'MYSQLHOST', default='localhost'),
+        'port': int(env_first('DB_PORT', 'MYSQLPORT', default='3306')),
+        'user': env_first('DB_USER', 'MYSQLUSER', default='root'),
+        'password': env_first('DB_PASSWORD', 'MYSQLPASSWORD', default=''),
+        'database': env_first('DB_NAME', 'MYSQLDATABASE', default='calcinashop'),
     }
 
 
@@ -144,25 +152,31 @@ def health_check():
 @app.route('/api/stock', methods=['GET'])
 def get_stock():
     """Devolve todo o stock"""
-    db = get_db()
-    cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM produtos ORDER BY nome")
-    produtos = cursor.fetchall()
-    cursor.close(); db.close()
-    return jsonify(produtos)
+    try:
+        db = get_db()
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM produtos ORDER BY nome")
+        produtos = cursor.fetchall()
+        cursor.close(); db.close()
+        return jsonify(produtos)
+    except Exception as e:
+        return jsonify({'erro': str(e)}), 500
 
 
 @app.route('/api/stock/<int:produto_id>', methods=['GET'])
 def get_produto(produto_id):
     """Devolve um produto específico"""
-    db = get_db()
-    cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM produtos WHERE id = %s", (produto_id,))
-    produto = cursor.fetchone()
-    cursor.close(); db.close()
-    if not produto:
-        return jsonify({'erro': 'Produto não encontrado'}), 404
-    return jsonify(produto)
+    try:
+        db = get_db()
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM produtos WHERE id = %s", (produto_id,))
+        produto = cursor.fetchone()
+        cursor.close(); db.close()
+        if not produto:
+            return jsonify({'erro': 'Produto não encontrado'}), 404
+        return jsonify(produto)
+    except Exception as e:
+        return jsonify({'erro': str(e)}), 500
 
 
 # ══════════════════════════════════════
