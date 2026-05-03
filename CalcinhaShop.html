@@ -1047,6 +1047,7 @@ socket.on('disconnect', () => {
 
 socket.on('nova_compra', (data) => {
   prependPedidoDashboard(data);
+  applyCompraToStockTable(data);
   showToast('🛒', 'Nova Compra Recebida!',
     data.cliente_nome + ' — €' + parseFloat(data.total).toFixed(2) + ' (Pedido #' + data.venda_id + ')',
     'accent');
@@ -1087,6 +1088,33 @@ function prependPedidoDashboard(data) {
   tr.innerHTML = '<td><span class="td-mono">#SA-' + data.venda_id + '</span></td><td>' + primeiroItem + extra + '</td><td>' + data.cliente_nome + '</td><td><span class="status status-blue">Em Processamento</span></td><td class="td-bold">€' + parseFloat(data.total).toFixed(2) + '</td>';
   tbody.insertBefore(tr, tbody.firstChild);
   while (tbody.rows.length > 4) tbody.deleteRow(tbody.rows.length - 1);
+}
+
+function applyCompraToStockTable(data) {
+  const rows = document.querySelectorAll('#page-stock .table-wrap tbody tr');
+  if (!rows.length || !data.itens || !data.itens.length) return;
+
+  for (const item of data.itens) {
+    const row = Array.from(rows).find(r => {
+      const nameEl = r.querySelector('.prod-name');
+      return nameEl && nameEl.textContent.trim() === item.nome;
+    });
+    if (!row) continue;
+
+    const stockCell = row.children[3];
+    const statusCell = row.children[5];
+    const novoStock = item.stock_depois;
+
+    stockCell.textContent = String(novoStock);
+
+    if (novoStock <= 0) {
+      statusCell.innerHTML = '<span class="status status-red">Esgotado</span>';
+    } else if (novoStock <= 5) {
+      statusCell.innerHTML = '<span class="status status-orange">Baixo stock</span>';
+    } else {
+      statusCell.innerHTML = '<span class="status status-green">En stock</span>';
+    }
+  }
 }
 
 function updateAlertaSidebar(data) {
