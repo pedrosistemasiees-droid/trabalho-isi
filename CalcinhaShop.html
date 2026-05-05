@@ -498,48 +498,21 @@ td{padding:14px 20px;font-size:13.5px;color:var(--gray-700)}
         </div>
         <div class="stock-value-card">
           <div class="svc-label">Valor Total Stock</div>
-          <div class="svc-value">€42.850,00</div>
-          <div class="svc-sub">1.240 Unidades <span class="svc-badge">+4,5% esta semana</span></div>
+          <div class="svc-value" id="stock-total-value">--</div>
+          <div class="svc-sub" id="stock-total-units">--</div>
         </div>
       </div>
 
       <div class="table-wrap">
         <table>
           <thead><tr><th>Produto</th><th>Marca</th><th>Tamanho</th><th>Stock</th><th>Preço</th><th>Estado</th><th></th></tr></thead>
-          <tbody>
-            <tr>
-              <td><div style="display:flex;align-items:center;gap:12px"><div class="prod-thumb">👟</div><div><div class="prod-name">Nike Air Max 270</div><div class="prod-sku">SKU: NK-AM270-001</div></div></div></td>
-              <td><span class="brand-tag">Nike</span></td><td>42</td><td>18</td><td class="td-bold">€149,90</td>
-              <td><span class="status status-green">En stock</span></td>
-              <td><div class="row-actions"><button class="icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></div></td>
-            </tr>
-            <tr>
-              <td><div style="display:flex;align-items:center;gap:12px"><div class="prod-thumb">🥿</div><div><div class="prod-name">Adidas Ultraboost 22</div><div class="prod-sku">SKU: AD-UB22-045</div></div></div></td>
-              <td><span class="brand-tag">Adidas</span></td><td>40</td><td>3</td><td class="td-bold">€189,00</td>
-              <td><span class="status status-orange">Baixo stock</span></td>
-              <td><div class="row-actions"><button class="icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></div></td>
-            </tr>
-            <tr>
-              <td><div style="display:flex;align-items:center;gap:12px"><div class="prod-thumb">👟</div><div><div class="prod-name">New Balance 550</div><div class="prod-sku">SKU: NB-550-NY</div></div></div></td>
-              <td><span class="brand-tag">New Balance</span></td><td>43</td><td>0</td><td class="td-bold">€120,00</td>
-              <td><span class="status status-red">Esgotado</span></td>
-              <td><div class="row-actions"><button class="icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></div></td>
-            </tr>
-            <tr>
-              <td><div style="display:flex;align-items:center;gap:12px"><div class="prod-thumb">🥾</div><div><div class="prod-name">Puma Suede Classic</div><div class="prod-sku">SKU: PU-SD-BK</div></div></div></td>
-              <td><span class="brand-tag">Puma</span></td><td>41</td><td>24</td><td class="td-bold">€85,00</td>
-              <td><span class="status status-green">En stock</span></td>
-              <td><div class="row-actions"><button class="icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></div></td>
-            </tr>
-          </tbody>
+          <tbody id="stock-table-body"></tbody>
         </table>
-        <div class="pagination">
-          <span class="pag-info">A mostrar 4 de 142 produtos</span>
-          <button class="pag-btn">‹</button>
-          <button class="pag-btn active">1</button>
-          <button class="pag-btn">2</button>
-          <button class="pag-btn">3</button>
-          <button class="pag-btn">›</button>
+        <div class="pagination" id="stock-pagination">
+          <span class="pag-info" id="stock-pag-info">A carregar produtos...</span>
+          <button class="pag-btn" id="stock-prev-btn">‹</button>
+          <span id="stock-page-buttons"></span>
+          <button class="pag-btn" id="stock-next-btn">›</button>
         </div>
       </div>
     </div>
@@ -927,6 +900,7 @@ function nav(page) {
   // Init charts lazily
   if (page === 'dashboard') initDashChart();
   if (page === 'vendas') initVendasCharts();
+  if (page === 'stock') renderStockTable();
 }
 
 // ── SUPPLIER TABS ──
@@ -948,6 +922,123 @@ document.querySelectorAll('.v-toggle').forEach(btn => {
 
 // ── CHARTS ──
 let dashChartInst, vendasInst, semanalInst, donutInst, miniInst;
+const STOCK_PAGE_SIZE = 4;
+let stockProdutos = [];
+let stockPage = 1;
+
+function getProdutoEmoji(marca) {
+  if (marca === 'Nike') return '👟';
+  if (marca === 'Adidas') return '🥿';
+  if (marca === 'Puma') return '🥾';
+  return '👞';
+}
+
+function getEstadoStock(stock) {
+  if (stock <= 0) return { cls: 'status-red', txt: 'Esgotado' };
+  if (stock <= 5) return { cls: 'status-orange', txt: 'Baixo stock' };
+  return { cls: 'status-green', txt: 'En stock' };
+}
+
+function formatEUR(value) {
+  return Number(value || 0).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' });
+}
+
+function updateStockSummary() {
+  const totalUnits = stockProdutos.reduce((sum, p) => sum + Number(p.stock || 0), 0);
+  const totalValue = stockProdutos.reduce((sum, p) => sum + (Number(p.stock || 0) * Number(p.preco || 0)), 0);
+
+  const valueEl = document.getElementById('stock-total-value');
+  const unitsEl = document.getElementById('stock-total-units');
+  if (valueEl) valueEl.textContent = formatEUR(totalValue);
+  if (unitsEl) unitsEl.textContent = totalUnits + ' Unidades';
+}
+
+function renderStockTable() {
+  const tbody = document.getElementById('stock-table-body');
+  if (!tbody) return;
+
+  const total = stockProdutos.length;
+  const totalPages = Math.max(1, Math.ceil(total / STOCK_PAGE_SIZE));
+  stockPage = Math.min(Math.max(1, stockPage), totalPages);
+
+  const start = (stockPage - 1) * STOCK_PAGE_SIZE;
+  const items = stockProdutos.slice(start, start + STOCK_PAGE_SIZE);
+
+  tbody.innerHTML = '';
+  for (const p of items) {
+    const estado = getEstadoStock(Number(p.stock || 0));
+    const tr = document.createElement('tr');
+    tr.dataset.produtoId = String(p.id);
+    tr.innerHTML =
+      '<td><div style="display:flex;align-items:center;gap:12px"><div class="prod-thumb">' + getProdutoEmoji(p.marca) + '</div><div><div class="prod-name">' + p.nome + '</div><div class="prod-sku">SKU: ' + p.sku + '</div></div></div></td>' +
+      '<td><span class="brand-tag">' + (p.marca || '-') + '</span></td>' +
+      '<td>' + (p.tamanho ?? '-') + '</td>' +
+      '<td>' + Number(p.stock || 0) + '</td>' +
+      '<td class="td-bold">' + formatEUR(p.preco) + '</td>' +
+      '<td><span class="status ' + estado.cls + '">' + estado.txt + '</span></td>' +
+      '<td><div class="row-actions"><button class="icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="icon-btn danger"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button></div></td>';
+    tbody.appendChild(tr);
+  }
+
+  const pagInfo = document.getElementById('stock-pag-info');
+  if (pagInfo) {
+    pagInfo.textContent = 'A mostrar ' + items.length + ' de ' + total + ' produtos';
+  }
+
+  const prevBtn = document.getElementById('stock-prev-btn');
+  const nextBtn = document.getElementById('stock-next-btn');
+  if (prevBtn) prevBtn.disabled = stockPage <= 1;
+  if (nextBtn) nextBtn.disabled = stockPage >= totalPages;
+
+  const pageButtons = document.getElementById('stock-page-buttons');
+  if (pageButtons) {
+    pageButtons.innerHTML = '';
+    for (let i = 1; i <= totalPages; i++) {
+      const b = document.createElement('button');
+      b.className = 'pag-btn' + (i === stockPage ? ' active' : '');
+      b.textContent = String(i);
+      b.addEventListener('click', () => {
+        stockPage = i;
+        renderStockTable();
+      });
+      pageButtons.appendChild(b);
+    }
+  }
+
+  updateStockSummary();
+}
+
+async function loadStockFromApi() {
+  try {
+    const response = await fetch(API_URL + '/api/stock');
+    if (!response.ok) throw new Error('Falha ao carregar stock');
+    const produtos = await response.json();
+    stockProdutos = Array.isArray(produtos) ? produtos : [];
+    renderStockTable();
+  } catch (err) {
+    showToast('⚠️', 'Erro no stock', 'Nao foi possivel carregar stock da API.', 'warning');
+  }
+}
+
+function wireStockPagination() {
+  const prevBtn = document.getElementById('stock-prev-btn');
+  const nextBtn = document.getElementById('stock-next-btn');
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      stockPage = Math.max(1, stockPage - 1);
+      renderStockTable();
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      const totalPages = Math.max(1, Math.ceil(stockProdutos.length / STOCK_PAGE_SIZE));
+      stockPage = Math.min(totalPages, stockPage + 1);
+      renderStockTable();
+    });
+  }
+}
 
 function initDashChart() {
   if (dashChartInst) return;
@@ -1033,6 +1124,9 @@ initDashChart();
 const API_URL = 'https://trabalho-isi-production.up.railway.app';
 const socket = io(API_URL, { transports: ['websocket', 'polling'] });
 
+wireStockPagination();
+loadStockFromApi();
+
 const connDot   = document.getElementById('conn-dot');
 const connLabel = document.getElementById('conn-label');
 
@@ -1091,30 +1185,16 @@ function prependPedidoDashboard(data) {
 }
 
 function applyCompraToStockTable(data) {
-  const rows = document.querySelectorAll('#page-stock .table-wrap tbody tr');
-  if (!rows.length || !data.itens || !data.itens.length) return;
+  if (!data.itens || !data.itens.length) return;
 
   for (const item of data.itens) {
-    const row = Array.from(rows).find(r => {
-      const nameEl = r.querySelector('.prod-name');
-      return nameEl && nameEl.textContent.trim() === item.nome;
-    });
-    if (!row) continue;
-
-    const stockCell = row.children[3];
-    const statusCell = row.children[5];
-    const novoStock = item.stock_depois;
-
-    stockCell.textContent = String(novoStock);
-
-    if (novoStock <= 0) {
-      statusCell.innerHTML = '<span class="status status-red">Esgotado</span>';
-    } else if (novoStock <= 5) {
-      statusCell.innerHTML = '<span class="status status-orange">Baixo stock</span>';
-    } else {
-      statusCell.innerHTML = '<span class="status status-green">En stock</span>';
+    const idx = stockProdutos.findIndex(p => Number(p.id) === Number(item.produto_id));
+    if (idx >= 0) {
+      stockProdutos[idx].stock = Number(item.stock_depois);
     }
   }
+
+  renderStockTable();
 }
 
 function updateAlertaSidebar(data) {
