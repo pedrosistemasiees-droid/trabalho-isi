@@ -5,6 +5,7 @@ import mysql.connector
 from datetime import datetime
 import os
 from urllib.parse import urlparse
+from collections import defaultdict
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'calcinashop_secret_2024'
@@ -104,6 +105,7 @@ def ensure_database_schema(db):
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 cliente_nome VARCHAR(150),
                 cliente_email VARCHAR(150),
+                pedido_externo VARCHAR(120) UNIQUE,
                 total DECIMAL(10,2) NOT NULL,
                 data_hora DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
@@ -122,6 +124,11 @@ def ensure_database_schema(db):
 
         cursor.execute("SELECT COUNT(*) FROM produtos")
         total_produtos = cursor.fetchone()[0]
+
+        # Migração leve para bases já existentes sem pedido_externo.
+        cursor.execute("SHOW COLUMNS FROM vendas LIKE 'pedido_externo'")
+        if cursor.fetchone() is None:
+            cursor.execute("ALTER TABLE vendas ADD COLUMN pedido_externo VARCHAR(120) UNIQUE")
 
         if total_produtos == 0:
             cursor.executemany(
@@ -212,28 +219,58 @@ def registar_compra():
             return jsonify({'erro': 'Não autorizado'}), 401
 
     data = request.get_json()
+    pedido_externo_header = request.headers.get('X-Idempotency-Key', '').strip()
+    pedido_externo_body = str(data.get('pedido_externo', '')).strip() if isinstance(data, dict) else ''
+    pedido_externo = pedido_externo_header or pedido_externo_body
 
     # Validação básica
     if not data or 'itens' not in data or not data['itens']:
         return jsonify({'erro': 'Dados inválidos. É necessário "itens".'}), 400
 
+    # Consolida linhas repetidas do mesmo produto na mesma compra.
+    itens_por_produto = defaultdict(int)
+    for item in data['itens']:
+        pid = item.get('produto_id')
+        qty = item.get('quantidade')
+
+        if not isinstance(pid, int) or not isinstance(qty, int) or qty <= 0:
+            return jsonify({
+                'erro': 'Item inválido. Use produto_id (int) e quantidade (int > 0).'
+            }), 400
+
+        itens_por_produto[pid] += qty
+
+    itens_normalizados = [
+        {'produto_id': pid, 'quantidade': qty}
+        for pid, qty in itens_por_produto.items()
+    ]
+
     db = get_db()
     cursor = db.cursor(dictionary=True)
 
     try:
+        if pedido_externo:
+            cursor.execute(
+                "SELECT id FROM vendas WHERE pedido_externo = %s",
+                (pedido_externo,)
+            )
+            venda_existente = cursor.fetchone()
+            if venda_existente:
+                db.rollback()
+                return jsonify({
+                    'sucesso': True,
+                    'venda_id': venda_existente['id'],
+                    'duplicado': True,
+                    'mensagem': 'Compra já registada anteriormente (idempotência).'
+                }), 200
+
         total = 0.0
         itens_detalhes = []
 
         # Verificar stock para todos os itens antes de debitar
-        for item in data['itens']:
+        for item in itens_normalizados:
             pid = item.get('produto_id')
             qty = item.get('quantidade')
-
-            if not isinstance(pid, int) or not isinstance(qty, int) or qty <= 0:
-                db.rollback()
-                return jsonify({
-                    'erro': 'Item inválido. Use produto_id (int) e quantidade (int > 0).'
-                }), 400
 
             cursor.execute("SELECT * FROM produtos WHERE id = %s FOR UPDATE", (pid,))
             produto = cursor.fetchone()
@@ -272,11 +309,12 @@ def registar_compra():
 
         # Registar venda
         cursor.execute(
-            """INSERT INTO vendas (cliente_nome, cliente_email, total, data_hora)
-               VALUES (%s, %s, %s, %s)""",
+            """INSERT INTO vendas (cliente_nome, cliente_email, pedido_externo, total, data_hora)
+               VALUES (%s, %s, %s, %s, %s)""",
             (
                 data.get('cliente_nome', 'Desconhecido'),
                 data.get('cliente_email', ''),
+                pedido_externo or None,
                 total,
                 datetime.now()
             )
